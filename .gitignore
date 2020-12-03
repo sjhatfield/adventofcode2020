@@ -139,8 +139,10 @@ cython_debug/
 
 bin/
 include/
-li/
+lib/
 lib64/
+
+pyvenv.cfg
 
 Q1input
 Q2input
