@@ -17,7 +17,7 @@ def read_input(raw: str) -> list:
     return instructions
 
 
-def ans1(instructions: list) -> int:
+def ans1(instructions: list) -> (int, bool):
     accumulated = 0
     cur_idx = 0
     visited = []
