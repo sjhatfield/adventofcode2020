@@ -1,52 +1,78 @@
-import numpy as np
-
 TEST = """
 .#.
 ..#
 ###
 """
 
+REAL = """
+.#..####
+.#.#...#
+#..#.#.#
+###..##.
+..##...#
+..##.###
+#.....#.
+..##..##
+"""
 
-def ans1(raw: str) -> int:
-    state = []
-    for line in raw.split("\n"):
-        if line:
-            state.append([])
-            for char in line:
-                state[-1].append(char)
-    state = np.array(state)
-    states = {0: state}
+def generate_intial(raw: str) -> dict:
+    # states keys: (t, z, x, y)
+    states = dict()
+    rows = raw.splitlines()
+    for r, row in enumerate(rows):
+        for c, char in enumerate(row):
+            if char == "#":
+                states[(0,0,r,c)] = "#"
+    return states
 
-    for i in range(6):
-        new_states = {}
-        x, y = states[0].shape
-        for z, state in states.items():
-            new_state = np.full((x + 2, y + 2), ".")
-            new_state[1:-1, 1:-1] = state.copy()
-            new_states[z] = new_state
-        new_states[min(states.keys()) - 1] = np.full((x + 2, y + 2), ".")
-        new_states[min(states.keys()) + 1] = np.full((x + 2, y + 2), ".")
-        for z, state in states.items():
-            for x in range(state.shape[0]):
-                for y in range(state.shape[1]):
-                    cur_state = state[x, y]
-                    neighbors = 0
-                    for i in range(-1, -3):
-                        for j in range(-1, -3):
-                            for k in range(-1, -3):
-                                try:
-                                    if states[z + k][x + i, y + j] == "#":
-                                        neighbors += 1
-                                except IndexError:
-                                    print("indexerror")
-                    if cur_state == "#":
-                        if not neighbors in [2, 3]:
-                            new_states[z][x + 1, y + 1] = "."
-                    else:
-                        if neighbors == 3:
-                            new_states[z][x + 1, y + 1] = "#"
-        states = new_states.copy()
-        print(states)
+def get_neighbors_active(states_key, states):
+    time = states_key[0]
+    z = states_key[1]
+    x = states_key[2]
+    y = states_key[3]
+    neighbors = 0
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            for k in range(-1, 2):
+                if (time, z + i, x + j, y + k) in states:
+                    if not (i == 0 and j == 0 and k == 0):
+                        if states[(time, z+i, x+j, y+k)] == "#":
+                            neighbors += 1
+    return neighbors
 
+def get_neighbors(states_key):
+    time = states_key[0]
+    z = states_key[1]
+    x = states_key[2]
+    y = states_key[3]
+    neighbors = []
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            for k in range(-1, 2):
+                if not (i==0 and j==0 and k ==0):
+                    neighbors.append((time, z + i, x+j, y+k))
+    return neighbors
 
-print(ans1(TEST))
+def one_cycle(states: dict) -> dict:
+    current_time = max(states, key=lambda x: x[0])[0]
+    states_copy = dict()
+    for state in states:
+        if state[0] == current_time:
+            states_copy[state] = states[state]
+    for state in states_copy:
+        neighbors = get_neighbors(state)
+        for n in neighbors:
+            neighbors_active = get_neighbors_active(n, states)
+            if n in states and states[n] == "#":
+                if neighbors_active in [2, 3]:
+                    states[(current_time + 1, n[1], n[2], n[3])] = "#"
+            else:
+                if neighbors_active == 3:
+                    states[(current_time + 1, n[1], n[2], n[3])] = "#"
+    return states
+
+states = generate_intial(REAL)
+for _ in range(7):
+    states = one_cycle(states)
+
+print(len([state for state in states if state[0] == 6]))
