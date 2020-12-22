@@ -417,9 +417,30 @@ def evaluate(tokens: deque) -> int:
     
     return accumulator
 
+def evaluate2(tokens: deque) -> int:
+    accumulator = 0
+    multiplier = 1
+
+    while tokens:
+        token = tokens.popleft()
+
+        if token.isdigit():
+            val = int(token)
+            accumulator += val * multiplier
+        elif token == "*":
+            multiplier = accumulator
+            accumulator = 0
+        elif token == "(":
+            val = evaluate2(tokens)
+            accumulator += val * multiplier
+        elif token == ")":
+            break
+    
+    return accumulator
+
 ans = 0
 for line in REAL.split("\n"):
     if line:
         tokens = deque([c for c in line if c != " "])
-        ans += evaluate(tokens)
+        ans += evaluate2(tokens)
 print(ans)
